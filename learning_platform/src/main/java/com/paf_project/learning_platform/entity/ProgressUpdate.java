@@ -9,6 +9,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 
 @Document(collection = "progress")
@@ -45,17 +47,11 @@ public class ProgressUpdate {
         this.skills = skills;
     }
 
+    public User getUser() {
+        return userId;
+    }
     public void setUser(User user) {
         this.userId = user;
     }
 
-}
-
-// Separate class for Month and Year together
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-class MonthYear {
-    private int month;
-    private int year;
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.paf_project.learning_platform.dto.UserDTO;
 import com.paf_project.learning_platform.entity.User;
 import com.paf_project.learning_platform.service.UserService;
 
@@ -31,16 +32,16 @@ public class UserController {
     //     return userService.allUsers();
     // }
 
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-    return new ResponseEntity<List<User>>(userService.allUsers(), HttpStatus.OK);
+     @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return new ResponseEntity<>(userService.getAllUserDTOs(), HttpStatus.OK);
     }
 
     // Get a single user by ID
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
-        Optional<User> user = userService.getUserById(id);
-        return user.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
+        Optional<UserDTO> userDTO = userService.getUserDTOById(id);
+        return userDTO.map(dto -> new ResponseEntity<>(dto, HttpStatus.OK))
                    .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
