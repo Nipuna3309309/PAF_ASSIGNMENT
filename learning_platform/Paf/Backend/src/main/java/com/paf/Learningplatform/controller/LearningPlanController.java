@@ -19,7 +19,7 @@ import com.paf.Learningplatform.model.LearningPlan;
 import com.paf.Learningplatform.service.LearningPlanService;
 
 @RestController
-@RequestMapping("/api/learning-plans")
+@RequestMapping("/api/learningplans")
 @CrossOrigin
 public class LearningPlanController {
     @Autowired
@@ -45,4 +45,5 @@ public class LearningPlanController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
 }

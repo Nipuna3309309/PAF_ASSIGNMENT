@@ -1,34 +1,46 @@
 package com.paf.Learningplatform.service;
 
-import java.util.List;
-
+import com.paf.Learningplatform.model.LearningPlan;
+import com.paf.Learningplatform.repository.LearningPlanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.paf.Learningplatform.model.LearningPlan;
-import com.paf.Learningplatform.repository.LearningPlanRepository;
+import java.util.List;
 
 @Service
 public class LearningPlanService {
+    
     @Autowired
-    private LearningPlanRepository repo;
+    private LearningPlanRepository learningPlanRepository;
 
+    // Create a learning plan
     public LearningPlan create(LearningPlan plan) {
-        return repo.save(plan);
+        return learningPlanRepository.save(plan);
     }
 
+    // Get learning plans by user ID
     public List<LearningPlan> getByUser(String userId) {
-        return repo.findByUserId(userId);
+        return learningPlanRepository.findByUserId(userId);
     }
 
+    // Update a learning plan
     public LearningPlan update(String id, LearningPlan updated) {
-        LearningPlan plan = repo.findById(id).orElseThrow();
+        LearningPlan plan = learningPlanRepository.findById(id).orElseThrow();
         plan.setTitle(updated.getTitle());
+        plan.setBackground(updated.getBackground());
+        plan.setScope(updated.getScope());
+        plan.setResourceLink(updated.getResourceLink());
+        plan.setSkills(updated.getSkills());
+        plan.setSuggestedCourses(updated.getSuggestedCourses());
+        plan.setDeadlineEnabled(updated.isDeadlineEnabled());
+        plan.setStartDate(updated.getStartDate());
+        plan.setEndDate(updated.getEndDate());
         plan.setTopics(updated.getTopics());
-        return repo.save(plan);
+        return learningPlanRepository.save(plan);
     }
 
+    // Delete a learning plan
     public void delete(String id) {
-        repo.deleteById(id);
+        learningPlanRepository.deleteById(id);
     }
 }

@@ -12,5 +12,13 @@ public class LearningPlan {
     private String id;
     private String userId;
     private String title;
-    private List<Topic> topics;
+    private String background;
+    private String scope;
+    private String resourceLink;
+    private List<String> skills;
+    private List<Course> suggestedCourses; // List of courses based on skills
+    private boolean deadlineEnabled;
+    private String startDate;
+    private String endDate;
+    private List<Topic> topics; // Topics related to the learning plan
 }

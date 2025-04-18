@@ -28,4 +28,7 @@ public class SecurityConfig {
                 .httpBasic(); // Enables username/password login with Postman
         return http.build();
     }
+    
 }
+
+
