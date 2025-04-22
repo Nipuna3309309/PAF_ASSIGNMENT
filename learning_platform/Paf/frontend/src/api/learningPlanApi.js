@@ -7,13 +7,14 @@ export const createLearningPlan = async (plan) => {
 };
 
 export const getLearningPlansByUser = async (userId) => {
-  return await axios.get(`${BASE_URL}/user/${userId}`);
+  return await axios.get(`${BASE_URL}/${userId}`);
 };
 
 export const updateLearningPlan = async (id, updatedPlan) => {
   return await axios.put(`${BASE_URL}/${id}`, updatedPlan);
 };
 
-export const deleteLearningPlan = async (id) => {cd 
+export const deleteLearningPlan = async (id) => {
   return await axios.delete(`${BASE_URL}/${id}`);
 };
+

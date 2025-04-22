@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import "tailwindcss";
 
 function LearningPlanCreation() {
   const [learningPlan, setLearningPlan] = useState({
+    userId: '12345',
     title: '',
     background: '',
     scope: '',
@@ -39,12 +41,10 @@ function LearningPlanCreation() {
             setNoCoursesMessage('');
           }
 
-          // Remove duplicates
           const uniqueCourses = [...new Set(response.data)];
           setCourses(uniqueCourses);
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(() => {
           setCourses([]);
           setNoCoursesMessage('Error fetching courses.');
         });
@@ -98,63 +98,63 @@ function LearningPlanCreation() {
     });
   };
 
-const handleSubmit = () => {
-  // Ensure suggestedCourses contains the actual course objects
-  const suggestedCoursesObjects = courses.map(course => ({ name: course }));
+  const handleSubmit = () => {
+    const suggestedCoursesObjects = learningPlan.suggestedCourses.map(course => ({ name: course }));
 
-  const learningPlanWithCourses = {
-    ...learningPlan,
-    suggestedCourses: suggestedCoursesObjects,
+    const learningPlanWithCourses = {
+      ...learningPlan,
+      suggestedCourses: suggestedCoursesObjects,
+    };
+
+    axios
+      .post('http://localhost:8085/api/learningplans', learningPlanWithCourses)
+      .then(() => {
+        setShowMessage(true);
+        setLearningPlan({
+          title: '',
+          background: '',
+          scope: '',
+          resourceLink: '',
+          skills: [],
+          suggestedCourses: [],
+          deadlineEnabled: false,
+          startDate: '',
+          endDate: '',
+          topics: [],
+        });
+      })
+      .catch((error) => {
+        console.log('Error:', error.response?.data || error.message);
+      });
   };
 
-  axios
-    .post('http://localhost:8085/api/learningplans', learningPlanWithCourses)
-    .then(() => {
-      setShowMessage(true);
-      setLearningPlan({
-        title: '',
-        background: '',
-        scope: '',
-        resourceLink: '',
-        skills: [],
-        suggestedCourses: [],
-        deadlineEnabled: false,
-        startDate: '',
-        endDate: '',
-        topics: [],
-      });
-    })
-    .catch((error) => {
-      console.log('Error:', error.response?.data || error.message);
-    });
-};
-
-  
-
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
-      <h1>Create Learning Plan</h1>
-      {showMessage && <div style={{ color: 'green' }}>Learning Plan created successfully!</div>}
+    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold mb-4 text-center">Create Learning Plan</h1>
+      {showMessage && <div className="mb-4 text-green-600 font-medium">✅ Learning Plan created successfully!</div>}
 
-      <form>
+      <form className="space-y-4">
         <input
           type="text"
           name="title"
           placeholder="Learning Plan Name"
           value={learningPlan.title}
           onChange={handleInputChange}
+          className="w-full p-2 border rounded-lg"
         />
         <textarea
           name="background"
           placeholder="Background"
           value={learningPlan.background}
           onChange={handleInputChange}
+          className="w-full p-2 border rounded-lg"
         />
         <textarea
           name="scope"
           placeholder="Scope"
           value={learningPlan.scope}
           onChange={handleInputChange}
+          className="w-full p-2 border rounded-lg"
         />
         <input
           type="text"
@@ -162,36 +162,45 @@ const handleSubmit = () => {
           placeholder="Resource Link"
           value={learningPlan.resourceLink}
           onChange={handleInputChange}
+          className="w-full p-2 border rounded-lg"
         />
 
         {/* Skills */}
-        <div>
+        <div className="flex gap-2 items-center">
           <input
             type="text"
             value={skillInput}
             onChange={handleSkillChange}
             placeholder="Enter skill"
+            className="flex-1 p-2 border rounded-lg"
           />
-          <button type="button" onClick={addSkill}>
+          <button
+            type="button"
+            onClick={addSkill}
+            className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+          >
             Add Skill
           </button>
         </div>
 
-        <div>
+        <div className="flex flex-wrap gap-2">
           {learningPlan.skills.map((skill, index) => (
-            <span key={index} style={{ marginRight: '10px' }}>
-              {skill}{' '}
-              <button type="button" onClick={() => removeSkill(skill)}>
-                ❌
+            <span
+              key={index}
+              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center"
+            >
+              {skill}
+              <button onClick={() => removeSkill(skill)} className="ml-2 text-red-500 hover:text-red-700">
+                ✕
               </button>
             </span>
           ))}
         </div>
 
-        {/* Courses */}
+        {/* Suggested Courses */}
         {courses.length > 0 && (
           <div>
-            <label>Suggested Courses</label>
+            <label className="block mb-1 font-medium">Suggested Courses</label>
             <select
               onChange={(e) => {
                 const selectedCourse = e.target.value;
@@ -208,6 +217,7 @@ const handleSubmit = () => {
                   });
                 }
               }}
+              className="w-full p-2 border rounded-lg"
             >
               <option value="">Select a course</option>
               {courses.map((course, index) => (
@@ -220,61 +230,72 @@ const handleSubmit = () => {
         )}
 
         {learningPlan.suggestedCourses.map((course, index) => (
-          <div key={index}>
-            {course}{' '}
-            <button type="button" onClick={() => removeCourse(course)}>
-              ❌
+          <div key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+            {course}
+            <button onClick={() => removeCourse(course)} className="text-red-500 hover:text-red-700">
+              ✕
             </button>
           </div>
         ))}
 
-        {noCoursesMessage && <p style={{ color: 'red' }}>{noCoursesMessage}</p>}
+        {noCoursesMessage && <p className="text-red-500">{noCoursesMessage}</p>}
 
-        {/* Deadline Toggle */}
-        <div>
+        {/* Deadline */}
+        <div className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={learningPlan.deadlineEnabled}
             onChange={handleDeadlineToggle}
           />
-          <label>Enable Deadline</label>
+          <label className="text-sm">Enable Deadline</label>
         </div>
 
         {learningPlan.deadlineEnabled && (
-          <div>
+          <div className="flex gap-4">
             <input
               type="date"
               name="startDate"
               value={learningPlan.startDate}
               onChange={handleInputChange}
+              className="p-2 border rounded-lg"
             />
             <input
               type="date"
               name="endDate"
               value={learningPlan.endDate}
               onChange={handleInputChange}
+              className="p-2 border rounded-lg"
             />
           </div>
         )}
 
         {/* Topics */}
-        <div>
+        <div className="flex gap-2">
           <input
             type="text"
             value={topicInput}
             onChange={(e) => setTopicInput(e.target.value)}
             placeholder="Enter Topic"
+            className="flex-1 p-2 border rounded-lg"
           />
-          <button type="button" onClick={addTopic}>
+          <button
+            type="button"
+            onClick={addTopic}
+            className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+          >
             Add Topic
           </button>
         </div>
 
         {learningPlan.topics.map((topic, index) => (
-          <div key={index}>{topic.name}</div>
+          <div key={index} className="text-gray-700">{topic.name}</div>
         ))}
 
-        <button type="button" onClick={handleSubmit}>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+        >
           Create Learning Plan
         </button>
       </form>
