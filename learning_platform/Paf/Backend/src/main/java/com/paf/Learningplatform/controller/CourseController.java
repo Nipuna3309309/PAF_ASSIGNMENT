@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/courses")
-@CrossOrigin
 public class CourseController {
+
     @Autowired
     private CourseRepository courseRepository;
+
     @Autowired
     private CourseService courseService;
 
@@ -45,11 +47,10 @@ public class CourseController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/courses/skill/{skill}")
+    @GetMapping("/skill/{skill}")
     public ResponseEntity<List<String>> getCoursesBySkill(@PathVariable String skill) {
         List<Course> courses = courseRepository.findBySkillIgnoreCase(skill);
         List<String> courseNames = courses.stream().map(Course::getName).toList();
         return ResponseEntity.ok(courseNames);
     }
-
 }

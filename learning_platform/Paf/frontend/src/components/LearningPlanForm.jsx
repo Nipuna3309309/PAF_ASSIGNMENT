@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 
 function LearningPlanCreation() {
@@ -20,18 +20,15 @@ function LearningPlanCreation() {
   const [showMessage, setShowMessage] = useState(false);
   const [noCoursesMessage, setNoCoursesMessage] = useState('');
 
-  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setLearningPlan({ ...learningPlan, [name]: value });
   };
 
-  // Handle skill input and fetch courses based on skill
   const handleSkillChange = (e) => {
     const skill = e.target.value;
     setSkillInput(skill);
 
-    // Fetch suggested courses for the entered skill
     if (skill.trim() !== '') {
       axios
         .get(`http://localhost:8085/api/courses/skill/${skill}`)
@@ -41,7 +38,10 @@ function LearningPlanCreation() {
           } else {
             setNoCoursesMessage('');
           }
-          setCourses(response.data); // this will be a list of course names
+
+          // Remove duplicates
+          const uniqueCourses = [...new Set(response.data)];
+          setCourses(uniqueCourses);
         })
         .catch((error) => {
           console.log(error);
@@ -54,28 +54,43 @@ function LearningPlanCreation() {
     }
   };
 
-  // Add skill to the learning plan
   const addSkill = () => {
-    if (skillInput.trim() !== '') {
+    if (skillInput.trim() !== '' && !learningPlan.skills.includes(skillInput)) {
       setLearningPlan({
         ...learningPlan,
         skills: [...learningPlan.skills, skillInput],
       });
       setSkillInput('');
-      setCourses([]); // Clear previous course suggestions
+      setCourses([]);
     }
   };
 
-  // Add topic to the learning plan
-  const addTopic = () => {
+  const removeSkill = (skillToRemove) => {
     setLearningPlan({
       ...learningPlan,
-      topics: [...learningPlan.topics, { name: topicInput, completed: false }],
+      skills: learningPlan.skills.filter((skill) => skill !== skillToRemove),
     });
-    setTopicInput('');
   };
 
-  // Toggle deadline enabled/disabled
+  const addTopic = () => {
+    if (topicInput.trim() !== '') {
+      setLearningPlan({
+        ...learningPlan,
+        topics: [...learningPlan.topics, { name: topicInput, completed: false }],
+      });
+      setTopicInput('');
+    }
+  };
+
+  const removeCourse = (courseToRemove) => {
+    setLearningPlan({
+      ...learningPlan,
+      suggestedCourses: learningPlan.suggestedCourses.filter(
+        (course) => course !== courseToRemove
+      ),
+    });
+  };
+
   const handleDeadlineToggle = () => {
     setLearningPlan({
       ...learningPlan,
@@ -83,37 +98,45 @@ function LearningPlanCreation() {
     });
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    axios
-      .post('http://localhost:8085/api/learningplans', learningPlan)
-      .then(() => {
-        setShowMessage(true);
-        setLearningPlan({
-          title: '',
-          background: '',
-          scope: '',
-          resourceLink: '',
-          skills: [],
-          suggestedCourses: [],
-          deadlineEnabled: false,
-          startDate: '',
-          endDate: '',
-          topics: [],
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+const handleSubmit = () => {
+  // Ensure suggestedCourses contains the actual course objects
+  const suggestedCoursesObjects = courses.map(course => ({ name: course }));
+
+  const learningPlanWithCourses = {
+    ...learningPlan,
+    suggestedCourses: suggestedCoursesObjects,
   };
 
+  axios
+    .post('http://localhost:8085/api/learningplans', learningPlanWithCourses)
+    .then(() => {
+      setShowMessage(true);
+      setLearningPlan({
+        title: '',
+        background: '',
+        scope: '',
+        resourceLink: '',
+        skills: [],
+        suggestedCourses: [],
+        deadlineEnabled: false,
+        startDate: '',
+        endDate: '',
+        topics: [],
+      });
+    })
+    .catch((error) => {
+      console.log('Error:', error.response?.data || error.message);
+    });
+};
+
+  
+
   return (
-    <div>
+    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '20px' }}>
       <h1>Create Learning Plan</h1>
-      {showMessage && <div>Learning Plan created successfully!</div>}
+      {showMessage && <div style={{ color: 'green' }}>Learning Plan created successfully!</div>}
 
       <form>
-        {/* Learning Plan Name */}
         <input
           type="text"
           name="title"
@@ -141,7 +164,7 @@ function LearningPlanCreation() {
           onChange={handleInputChange}
         />
 
-        {/* Skill Input */}
+        {/* Skills */}
         <div>
           <input
             type="text"
@@ -154,29 +177,37 @@ function LearningPlanCreation() {
           </button>
         </div>
 
-        {/* Display added skills */}
         <div>
           {learningPlan.skills.map((skill, index) => (
             <span key={index} style={{ marginRight: '10px' }}>
-              {skill}
+              {skill}{' '}
+              <button type="button" onClick={() => removeSkill(skill)}>
+                ❌
+              </button>
             </span>
           ))}
         </div>
 
-        {/* Suggested Courses Dropdown */}
+        {/* Courses */}
         {courses.length > 0 && (
           <div>
             <label>Suggested Courses</label>
             <select
-              onChange={(e) =>
-                setLearningPlan({
-                  ...learningPlan,
-                  suggestedCourses: [
-                    ...learningPlan.suggestedCourses,
-                    e.target.value,
-                  ],
-                })
-              }
+              onChange={(e) => {
+                const selectedCourse = e.target.value;
+                if (
+                  selectedCourse &&
+                  !learningPlan.suggestedCourses.includes(selectedCourse)
+                ) {
+                  setLearningPlan({
+                    ...learningPlan,
+                    suggestedCourses: [
+                      ...learningPlan.suggestedCourses,
+                      selectedCourse,
+                    ],
+                  });
+                }
+              }}
             >
               <option value="">Select a course</option>
               {courses.map((course, index) => (
@@ -188,10 +219,18 @@ function LearningPlanCreation() {
           </div>
         )}
 
-        {/* No courses message */}
-        {noCoursesMessage && <p>{noCoursesMessage}</p>}
+        {learningPlan.suggestedCourses.map((course, index) => (
+          <div key={index}>
+            {course}{' '}
+            <button type="button" onClick={() => removeCourse(course)}>
+              ❌
+            </button>
+          </div>
+        ))}
 
-        {/* Deadline Option */}
+        {noCoursesMessage && <p style={{ color: 'red' }}>{noCoursesMessage}</p>}
+
+        {/* Deadline Toggle */}
         <div>
           <input
             type="checkbox"
@@ -201,7 +240,6 @@ function LearningPlanCreation() {
           <label>Enable Deadline</label>
         </div>
 
-        {/* Deadline Input Fields */}
         {learningPlan.deadlineEnabled && (
           <div>
             <input
@@ -219,7 +257,7 @@ function LearningPlanCreation() {
           </div>
         )}
 
-        {/* Topic Input */}
+        {/* Topics */}
         <div>
           <input
             type="text"
@@ -232,7 +270,10 @@ function LearningPlanCreation() {
           </button>
         </div>
 
-        {/* Submit Button */}
+        {learningPlan.topics.map((topic, index) => (
+          <div key={index}>{topic.name}</div>
+        ))}
+
         <button type="button" onClick={handleSubmit}>
           Create Learning Plan
         </button>
