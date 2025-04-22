@@ -16,6 +16,11 @@ public class SkillController {
     @Autowired
     private SkillService skillService;
 
+    @GetMapping
+    public List<Skill> getAllSkills() {
+        return skillService.getAllSkills();
+    }
+
     @PostMapping("/{userId}")
     public ResponseEntity<List<String>> addSkillToUser(
             @PathVariable String userId,

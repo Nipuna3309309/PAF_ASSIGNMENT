@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
@@ -31,11 +32,12 @@ public class ProgressUpdate {
     private String credentialUrl;
     private String mediaUrl;
 
+    @JsonIgnore
     @DocumentReference
     private User userId;
 
 
-    @DocumentReference
+    @DBRef
     private List<Skill> skills;  // Make sure this matches the type `List<Skill>`
 
     // Getter and Setter for skills

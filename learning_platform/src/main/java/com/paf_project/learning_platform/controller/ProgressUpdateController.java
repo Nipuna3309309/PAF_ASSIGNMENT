@@ -69,10 +69,12 @@ public class ProgressUpdateController {
 
 
     @PostMapping("/add/{userId}")
-    public ResponseEntity<String> createProgressUpdate(@PathVariable String userId, @RequestBody ProgressUpdate progressUpdate) {
-        String response = progressUpdateService.createProgressUpdate(userId, progressUpdate);
+    public ResponseEntity<String> createProgressUpdate(@PathVariable String userId, @RequestBody ProgressUpdateDTO dto) {
+        String response = progressUpdateService.createProgressUpdate(userId, dto);
         return ResponseEntity.ok(response);
     }
+    
+
 
     @GetMapping("/user/{userId}/progress-updates")
     public ResponseEntity<List<ProgressUpdateDTO>> getProgressUpdatesByUserId(@PathVariable String userId) {

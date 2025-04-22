@@ -19,12 +19,16 @@ public class SkillService {
     @Autowired
     private UserRepository userRepository;
 
-// Add a skill to a specific user and return updated skills
-public List<Skill> addSkillToUserAndReturnSkills(String userId, String skillName) {
-    Optional<User> optionalUser = userRepository.findById(userId);
-    if (optionalUser.isEmpty()) {
-        throw new RuntimeException("User not found."); // You can handle this with a custom exception too
+    public List<Skill> getAllSkills() {
+        return skillRepository.findAll();
     }
+
+    // Add a skill to a specific user and return updated skills
+    public List<Skill> addSkillToUserAndReturnSkills(String userId, String skillName) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+        throw new RuntimeException("User not found."); // You can handle this with a custom exception too
+        }
 
     User user = optionalUser.get();
 
@@ -47,15 +51,15 @@ public List<Skill> addSkillToUserAndReturnSkills(String userId, String skillName
     }
 
     return user.getSkills(); // Return the updated list of skills
-}
+    }
 
 
-public List<String> addSkillToUserAndReturnSkillNames(String userId, String skillName) {
-    List<Skill> skills = addSkillToUserAndReturnSkills(userId, skillName);
-    return skills.stream()
+    public List<String> addSkillToUserAndReturnSkillNames(String userId, String skillName) {
+        List<Skill> skills = addSkillToUserAndReturnSkills(userId, skillName);
+        return skills.stream()
                  .map(Skill::getName)
                  .collect(Collectors.toList());
-}
+    }
 
 
     // Get all skills for a specific user
@@ -83,4 +87,47 @@ public List<String> addSkillToUserAndReturnSkillNames(String userId, String skil
             return "Skill not found for user.";
         }
     }
+
+    // Inside SkillService.java
+
+public List<Skill> processSkillsForProgressUpdate(String userId, List<Skill> incomingSkills) {
+    Optional<User> optionalUser = userRepository.findById(userId);
+    if (optionalUser.isEmpty()) {
+        throw new RuntimeException("User not found with ID: " + userId);
+    }
+
+    User user = optionalUser.get();
+
+    if (user.getSkills() == null) {
+        user.setSkills(new ArrayList<>());
+    }
+
+    List<Skill> processedSkills = new ArrayList<>();
+
+    for (Skill skill : incomingSkills) {
+        Skill dbSkill = skillRepository.findByName(skill.getName())
+            .orElseGet(() -> skillRepository.save(new Skill(skill.getName()))); // Save if not exists
+
+        // Add to user if not already there
+        boolean alreadyInUser = user.getSkills().stream()
+            .anyMatch(s -> s.getName().equalsIgnoreCase(dbSkill.getName()));
+
+        if (!alreadyInUser) {
+            user.getSkills().add(dbSkill);
+        }
+
+        processedSkills.add(dbSkill);
+    }
+
+    userRepository.save(user); // Save updated user
+
+    return processedSkills; // Return for ProgressUpdate use
+}
+
+
+    public Skill getSkillByNameOrCreate(String name) {
+        return skillRepository.findByName(name)
+                .orElseGet(() -> skillRepository.save(new Skill(name)));
+    }
+    
 }

@@ -8,12 +8,15 @@ import org.springframework.stereotype.Service;
 
 import com.paf_project.learning_platform.dto.MonthYearDTO;
 import com.paf_project.learning_platform.dto.ProgressUpdateDTO;
+import com.paf_project.learning_platform.entity.MonthYear;
 import com.paf_project.learning_platform.entity.ProgressUpdate;
 import com.paf_project.learning_platform.entity.Skill;
 import com.paf_project.learning_platform.entity.User;
 import com.paf_project.learning_platform.repository.ProgressUpdateRepository;
+import com.paf_project.learning_platform.repository.SkillRepository;
 import com.paf_project.learning_platform.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +36,9 @@ public class ProgressUpdateService {
     
     @Autowired
     private SkillService skillService;
+
+    @Autowired
+    private SkillRepository skillRepository;
     
 
     public ProgressUpdateDTO convertToDTO(ProgressUpdate progressUpdate) {
@@ -100,28 +106,121 @@ public class ProgressUpdateService {
         return progressUpdateRepository.findById(id);
     }
 
-    public String createProgressUpdate(String userId, ProgressUpdate progressUpdate) {
-        Optional<User> optionalUser = userRepository.findById(userId);
+    // public String createProgressUpdate(String userId, ProgressUpdate progressUpdate) {
+    //     Optional<User> optionalUser = userRepository.findById(userId);
 
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
+    //     if (optionalUser.isPresent()) {
+    //         User user = optionalUser.get();
 
-            // Process skills and add them to the user at the same time
-            processSkills(progressUpdate.getSkills(), user);
+    //         // Process skills and add them to the user at the same time
+    //         processSkills(progressUpdate.getSkills(), user);
 
-            // Associate progress update with the user
-            progressUpdate.setUser(user);
-            ProgressUpdate savedProgress = progressUpdateRepository.save(progressUpdate);
+    //         // Associate progress update with the user
+    //         progressUpdate.setUser(user);
+    //         ProgressUpdate savedProgress = progressUpdateRepository.save(progressUpdate);
 
-            // Update user's progress update list
-            user.getProgressUpdates().add(savedProgress);
-            userRepository.save(user);
+    //         // Update user's progress update list
+    //         user.getProgressUpdates().add(savedProgress);
+    //         userRepository.save(user);
 
-            return "Progress update added successfully and user updated!";
-        } else {
-            return "User not found!";
+    //         return "Progress update added successfully and user updated!";
+    //     } else {
+    //         return "User not found!";
+    //     }
+    // }
+
+//    public String createProgressUpdate(String userId, ProgressUpdateDTO dto) {
+//     Optional<User> optionalUser = userRepository.findById(userId);
+
+//     if (optionalUser.isPresent()) {
+//         User user = optionalUser.get();
+
+//         //  Convert DTO to entity
+//         ProgressUpdate progressUpdate = new ProgressUpdate();
+//         progressUpdate.setName(dto.getName());
+//         progressUpdate.setIssuingOrganization(dto.getIssuingOrganization());
+//         progressUpdate.setIssueDate(new MonthYear(dto.getIssueDate().getMonth(), dto.getIssueDate().getYear()));
+//         progressUpdate.setExpireDate(new MonthYear(dto.getExpireDate().getMonth(), dto.getExpireDate().getYear()));
+//         progressUpdate.setCredentialId(dto.getCredentialId());
+//         progressUpdate.setCredentialUrl(dto.getCredentialUrl());
+//         progressUpdate.setMediaUrl(dto.getMediaUrl());
+
+//         // Handle skill processing
+//         List<Skill> updatedSkills = skillService.processSkillsForProgressUpdate(userId, dto.getSkills());
+//         progressUpdate.setSkills(updatedSkills);
+
+//         // Link user and save
+//         progressUpdate.setUser(user);
+//         ProgressUpdate savedProgress = progressUpdateRepository.save(progressUpdate);
+
+//         //  Update user’s progress list
+//         if (user.getProgressUpdates() == null) {
+//             user.setProgressUpdates(new ArrayList<>());
+//         }
+//         user.getProgressUpdates().add(savedProgress);
+//         userRepository.save(user);
+
+//         return "Progress update added successfully and user updated!";
+//     } else {
+//         return "User not found!";
+//     }
+// }
+
+public String createProgressUpdate(String userId, ProgressUpdateDTO dto) {
+    Optional<User> optionalUser = userRepository.findById(userId);
+
+    if (optionalUser.isPresent()) {
+        User user = optionalUser.get();
+
+        // Convert DTO to entity
+        ProgressUpdate progressUpdate = new ProgressUpdate();
+        progressUpdate.setName(dto.getName());
+        progressUpdate.setIssuingOrganization(dto.getIssuingOrganization());
+        progressUpdate.setIssueDate(new MonthYear(dto.getIssueDate().getMonth(), dto.getIssueDate().getYear()));
+        progressUpdate.setExpireDate(new MonthYear(dto.getExpireDate().getMonth(), dto.getExpireDate().getYear()));
+        progressUpdate.setCredentialId(dto.getCredentialId());
+        progressUpdate.setCredentialUrl(dto.getCredentialUrl());
+        progressUpdate.setMediaUrl(dto.getMediaUrl());
+
+        // Process and attach skills
+        List<Skill> updatedSkills = skillService.processSkillsForProgressUpdate(userId, dto.getSkills());
+        progressUpdate.setSkills(updatedSkills);
+
+        // Associate progress update with the user
+        progressUpdate.setUser(user);
+
+        // Add progress update skills to user's skills if not already present
+        if (user.getSkills() == null) {
+            user.setSkills(new ArrayList<>());
         }
+        for (Skill skill : updatedSkills) {
+            boolean alreadyHasSkill = user.getSkills().stream()
+                .anyMatch(s -> s.getName().equalsIgnoreCase(skill.getName()));
+            if (!alreadyHasSkill) {
+                user.getSkills().add(skill);
+            }
+        }
+
+        // Save progress update
+        ProgressUpdate savedProgress = progressUpdateRepository.save(progressUpdate);
+
+        // Add progress update to user
+        if (user.getProgressUpdates() == null) {
+            user.setProgressUpdates(new ArrayList<>());
+        }
+        user.getProgressUpdates().add(savedProgress);
+
+        // Save updated user
+        userRepository.save(user);
+
+        return "Progress update added and user's skills updated!";
+    } else {
+        return "User not found!";
     }
+}
+
+    
+
 
     public ProgressUpdate editProgressUpdate(ObjectId id, ProgressUpdate updatedProgress) {
         Optional<ProgressUpdate> existingProgressOpt = progressUpdateRepository.findById(id);
@@ -175,4 +274,4 @@ public class ProgressUpdateService {
     }
     
 
-}
+} 
