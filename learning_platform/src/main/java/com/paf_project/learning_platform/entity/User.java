@@ -28,9 +28,8 @@ public class User {
     private String email;
 
     @DocumentReference
-    private List<Skill> skills; // List of skills associated with the user
+    private List<Skill> skills; 
 
     @DocumentReference
-    private List<ProgressUpdate> progressUpdates; // Stores only ProgressUpdate IDs
-
+    private List<ProgressUpdate> progressUpdates; 
 }

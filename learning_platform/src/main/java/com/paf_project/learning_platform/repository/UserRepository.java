@@ -6,5 +6,4 @@ import com.paf_project.learning_platform.entity.User;
 
 public interface UserRepository extends MongoRepository<User, String> {
 
- 
 }

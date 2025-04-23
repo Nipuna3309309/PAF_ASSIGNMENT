@@ -27,31 +27,31 @@ public class SkillService {
     public List<Skill> addSkillToUserAndReturnSkills(String userId, String skillName) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty()) {
-        throw new RuntimeException("User not found."); // You can handle this with a custom exception too
+        throw new RuntimeException("User not found."); 
         }
 
-    User user = optionalUser.get();
+        User user = optionalUser.get();
 
-    // Find or create skill by name
-    Skill skill = skillRepository.findByName(skillName)
+        // Find or create skill by name
+        Skill skill = skillRepository.findByName(skillName)
             .orElseGet(() -> skillRepository.save(new Skill(skillName)));
 
-    // Initialize user's skill list if null
-    if (user.getSkills() == null) {
-        user.setSkills(new ArrayList<>());
-    }
+        // Initialize user's skill list if null
+        if (user.getSkills() == null) {
+            user.setSkills(new ArrayList<>());
+        }
 
-    // Check if user already has this skill
-    boolean alreadyHasSkill = user.getSkills().stream()
+        // Check if user already has this skill
+        boolean alreadyHasSkill = user.getSkills().stream()
             .anyMatch(s -> s.getName().equalsIgnoreCase(skill.getName()));
 
-    if (!alreadyHasSkill) {
-        user.getSkills().add(skill);
-        userRepository.save(user);
-    }
+        if (!alreadyHasSkill) {
+            user.getSkills().add(skill);
+            userRepository.save(user);
+        }
 
-    return user.getSkills(); // Return the updated list of skills
-    }
+        return user.getSkills(); // Return the updated list of skills
+        }
 
 
     public List<String> addSkillToUserAndReturnSkillNames(String userId, String skillName) {
@@ -88,41 +88,41 @@ public class SkillService {
         }
     }
 
-    // Inside SkillService.java
 
-public List<Skill> processSkillsForProgressUpdate(String userId, List<Skill> incomingSkills) {
-    Optional<User> optionalUser = userRepository.findById(userId);
-    if (optionalUser.isEmpty()) {
-        throw new RuntimeException("User not found with ID: " + userId);
-    }
 
-    User user = optionalUser.get();
-
-    if (user.getSkills() == null) {
-        user.setSkills(new ArrayList<>());
-    }
-
-    List<Skill> processedSkills = new ArrayList<>();
-
-    for (Skill skill : incomingSkills) {
-        Skill dbSkill = skillRepository.findByName(skill.getName())
-            .orElseGet(() -> skillRepository.save(new Skill(skill.getName()))); // Save if not exists
-
-        // Add to user if not already there
-        boolean alreadyInUser = user.getSkills().stream()
-            .anyMatch(s -> s.getName().equalsIgnoreCase(dbSkill.getName()));
-
-        if (!alreadyInUser) {
-            user.getSkills().add(dbSkill);
+    public List<Skill> processSkillsForProgressUpdate(String userId, List<Skill> incomingSkills) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isEmpty()) {
+            throw new RuntimeException("User not found with ID: " + userId);
         }
 
-        processedSkills.add(dbSkill);
+        User user = optionalUser.get();
+
+        if (user.getSkills() == null) {
+            user.setSkills(new ArrayList<>());
+        }
+
+        List<Skill> processedSkills = new ArrayList<>();
+
+        for (Skill skill : incomingSkills) {
+            Skill dbSkill = skillRepository.findByName(skill.getName())
+                .orElseGet(() -> skillRepository.save(new Skill(skill.getName()))); // Save if not exists
+
+            // Add to user if not already there
+            boolean alreadyInUser = user.getSkills().stream()
+                .anyMatch(s -> s.getName().equalsIgnoreCase(dbSkill.getName()));
+
+            if (!alreadyInUser) {
+                user.getSkills().add(dbSkill);
+            }
+
+            processedSkills.add(dbSkill);
+        }
+
+        userRepository.save(user); // Save updated user
+
+        return processedSkills; // Return for ProgressUpdate use
     }
-
-    userRepository.save(user); // Save updated user
-
-    return processedSkills; // Return for ProgressUpdate use
-}
 
 
     public Skill getSkillByNameOrCreate(String name) {

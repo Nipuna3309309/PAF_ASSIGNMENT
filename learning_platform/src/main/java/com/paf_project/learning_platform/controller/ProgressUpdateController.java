@@ -18,40 +18,15 @@ import java.util.Optional;
 @RequestMapping("/api/v1/progress-updates")
 public class ProgressUpdateController {
 
-//    @GetMapping
-//    public String getAllProgressUpdatesString() {
-//        return "All Progress Updates!";
-//    }
-
-//    @GetMapping
-//    public ResponseEntity<String> getAllProgressUpdatesResponse() {
-//        return new ResponseEntity<>("All Progress Updates!", HttpStatus.OK);
-//    }
-
     @Autowired
     private ProgressUpdateService progressUpdateService;
-    
 
-    // @GetMapping
-    // public ResponseEntity<List<ProgressUpdate>> getAllProgressUpdates() {
-    //     return new ResponseEntity<List<ProgressUpdate>>(progressUpdateService.allProgressUpdates(),HttpStatus.OK);
-    // }
-
+    //get all progressUpdates
     @GetMapping
     public ResponseEntity<List<ProgressUpdateDTO>> getAllProgressUpdates() {
         return new ResponseEntity<>(progressUpdateService.getAllProgressUpdateDTOs(), HttpStatus.OK);
     }
-    //Controller will only consult it self about the task of getting a request of the user and returning response
-    //nothing else
-    //thats what its doing, all it doing is using a service class and deligating the task of fetching all
-    //theprogress updates from the database and giving it back to the API
 
-
-    // @GetMapping("/{id}")
-    // public ResponseEntity<Optional<ProgressUpdate>> getSingleProgressUpdate(@PathVariable ObjectId id){
-    //     //meka gahnna kalin gihin service eke method eka hadnna oni
-    //     return new ResponseEntity<Optional<ProgressUpdate>>(progressUpdateService.singleProgressUpdate(id), HttpStatus.OK);
-    // }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProgressUpdateDTO> getProgressUpdateDTO(@PathVariable ObjectId id) {
@@ -59,15 +34,8 @@ public class ProgressUpdateController {
         return dto.map(data -> new ResponseEntity<>(data, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-    // @PostMapping
-    // public ResponseEntity<ProgressUpdate> createProgressUpdate(@RequestBody ProgressUpdate progressUpdate) {
-    //     // Create the progress update without generating an auto-increment ID
-    //     ProgressUpdate createdProgressUpdate = progressUpdateService.createProgressUpdate(progressUpdate);
-    
-    //     return new ResponseEntity<>(createdProgressUpdate, HttpStatus.CREATED);
-    // }
 
-
+    //create Progress Update
     @PostMapping("/add/{userId}")
     public ResponseEntity<String> createProgressUpdate(@PathVariable String userId, @RequestBody ProgressUpdateDTO dto) {
         String response = progressUpdateService.createProgressUpdate(userId, dto);
@@ -75,13 +43,14 @@ public class ProgressUpdateController {
     }
     
 
-
+    //Get particular users ProgressUpdates
     @GetMapping("/user/{userId}/progress-updates")
     public ResponseEntity<List<ProgressUpdateDTO>> getProgressUpdatesByUserId(@PathVariable String userId) {
         List<ProgressUpdateDTO> progressUpdates = progressUpdateService.getProgressUpdatesByUserId(userId);
         return new ResponseEntity<>(progressUpdates, HttpStatus.OK);
     }
 
+    //edit Progress Update
     @PutMapping("/{id}")
     public ResponseEntity<ProgressUpdate> editProgressUpdate(
             @PathVariable ObjectId id, 
@@ -91,6 +60,7 @@ public class ProgressUpdateController {
         return ResponseEntity.ok(updated);
     }
 
+    //Delete Progress Update
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProgressUpdate(@PathVariable ObjectId id) {
         try {

@@ -20,14 +20,13 @@ import java.util.List;
 @NoArgsConstructor
 public class ProgressUpdate {
 
-
     @Id
     private ObjectId id; 
 
     private String name;
     private String issuingOrganization;
-    private MonthYear issueDate; // Issue date containing month and year
-    private MonthYear expireDate; // Expire date containing month and year (nullable)
+    private MonthYear issueDate;
+    private MonthYear expireDate; 
     private String credentialId;
     private String credentialUrl;
     private String mediaUrl;
@@ -38,7 +37,7 @@ public class ProgressUpdate {
 
 
     @DBRef
-    private List<Skill> skills;  // Make sure this matches the type `List<Skill>`
+    private List<Skill> skills;  
 
     // Getter and Setter for skills
     public List<Skill> getSkills() {

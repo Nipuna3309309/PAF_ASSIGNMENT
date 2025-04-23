@@ -16,11 +16,13 @@ public class SkillController {
     @Autowired
     private SkillService skillService;
 
+    //get all skills
     @GetMapping
     public List<Skill> getAllSkills() {
         return skillService.getAllSkills();
     }
 
+    //add skills to a pariticular user
     @PostMapping("/{userId}")
     public ResponseEntity<List<String>> addSkillToUser(
             @PathVariable String userId,
@@ -31,14 +33,14 @@ public class SkillController {
         return ResponseEntity.ok(updatedSkillNames);
     }
 
-    // GET /api/skills/{userId}
+    //Get particular users skills 
     @GetMapping("/{userId}")
     public ResponseEntity<List<Skill>> getUserSkills(@PathVariable String userId) {
         List<Skill> skills = skillService.getUserSkills(userId);
         return ResponseEntity.ok(skills);
     }
 
-    // DELETE /api/skills/{userId}/{skillId}
+    //delete particular user skill
     @DeleteMapping("/{userId}/{skillId}")
     public ResponseEntity<String> removeSkillFromUser(
             @PathVariable String userId,

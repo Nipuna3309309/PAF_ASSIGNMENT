@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProgressUpdateDTO {
-    private String id; // This can be ObjectId.toString()
+    private String id; // ObjectId.toString()
     private String name;
     private String issuingOrganization;
     private MonthYearDTO issueDate;

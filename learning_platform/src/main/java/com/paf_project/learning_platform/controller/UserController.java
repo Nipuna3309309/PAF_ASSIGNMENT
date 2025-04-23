@@ -27,11 +27,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // @GetMapping
-    // public List<User> getAllUsers() {
-    //     return userService.allUsers();
-    // }
-
      @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return new ResponseEntity<>(userService.getAllUserDTOs(), HttpStatus.OK);
