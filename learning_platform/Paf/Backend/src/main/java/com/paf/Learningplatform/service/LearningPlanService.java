@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class LearningPlanService {
-    
+
     @Autowired
     private LearningPlanRepository learningPlanRepository;
 
@@ -22,6 +22,12 @@ public class LearningPlanService {
     public List<LearningPlan> getByUser(String userId) {
         return learningPlanRepository.findByUserId(userId);
     }
+
+    // Get a single learning plan by ID
+    public LearningPlan getById(String id) {
+        return learningPlanRepository.findById(id).orElse(null);
+    }
+    
 
     // Update a learning plan
     public LearningPlan update(String id, LearningPlan updated) {

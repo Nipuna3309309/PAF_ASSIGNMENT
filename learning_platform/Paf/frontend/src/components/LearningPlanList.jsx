@@ -1,63 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getLearningPlansByUser, deleteLearningPlan } from '../api/learningPlanApi';
+import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import { Box, Typography, Paper, CircularProgress, Button } from '@mui/material';
 
 const LearningPlanList = ({ userId }) => {
   const [plans, setPlans] = useState([]);
-  const navigate = useNavigate();
-
-  const loadPlans = async () => {
-    try {
-      const res = await getLearningPlansByUser(userId);
-      setPlans(res.data);
-    } catch (err) {
-      console.error('Error fetching plans:', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    await deleteLearningPlan(id);
-    loadPlans(); // refresh list
-  };
-  
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Correct placement
 
   useEffect(() => {
-    if (userId) {
-      loadPlans();
-    }
+    axios.get(`http://localhost:8085/api/learningplans/${userId}`)
+      .then((res) => {
+        setPlans(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch learning plans:', err);
+        setLoading(false);
+      });
   }, [userId]);
 
-  return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">Learning Plans</h3>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          onClick={() => navigate('/create')}
-        >
-          + Create Learning Plan
-        </button>
-      </div>
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-      <ul className="space-y-2">
-        {plans.map((plan) => (
-          <li
-            key={plan._id}
-            className="bg-white shadow p-4 rounded flex justify-between items-center"
+  return (
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Your Learning Plans
+      </Typography>
+
+      <Button
+        variant="contained"
+        color="primary"
+        component={Link}
+        to="/create"
+        sx={{ mb: 3 }}
+      >
+        Create New Plan
+      </Button>
+
+      {plans.length === 0 ? (
+        <Typography>No learning plans found.</Typography>
+      ) : (
+        plans.map((plan) => (
+          <Paper
+            key={plan.id} // Use `id` instead of `_id`
+            elevation={2}
+            sx={{
+              p: 2,
+              mb: 2,
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                cursor: 'pointer',
+              },
+            }}
+            onClick={() => navigate(`/plan/${plan.id}`)} // Navigate to plan detail
           >
-            <div>
-              <strong>{plan.title}</strong>: {plan.description}
-            </div>
-            <button
-              onClick={() => handleDelete(plan._id)}
-              className="text-red-600 hover:text-red-800"
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+            <Typography variant="h6">{plan.title}</Typography>
+            <Typography variant="body2" color="textSecondary">
+              {plan.background.slice(0, 100)}...
+            </Typography>
+          </Paper>
+        ))
+      )}
+    </Box>
   );
 };
 

@@ -46,4 +46,13 @@ public class LearningPlanController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/plan/{id}")
+    public ResponseEntity<LearningPlan> getById(@PathVariable String id) {
+        LearningPlan plan = service.getById(id);
+        if (plan == null) {
+            return ResponseEntity.notFound().build(); // Return 404 if plan is not found
+        }
+        return ResponseEntity.ok(plan);
+    }
+
 }
