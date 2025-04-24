@@ -16,9 +16,10 @@ public class LearningPlan {
     private String scope;
     private String resourceLink;
     private List<String> skills;
-    private List<Course> suggestedCourses; // List of courses based on skills
+    private List<String> suggestedCourses;
     private boolean deadlineEnabled;
     private String startDate;
     private String endDate;
-    private List<Topic> topics; // Topics related to the learning plan
+    private List<String> topics;
+    private List<Task> tasks; // Reference to the Task class
 }

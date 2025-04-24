@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, CircularProgress, Typography, Button, Divider } from '@mui/material';
+import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import axios from 'axios';
 
 const LearningPlanDetail = () => {
@@ -25,7 +25,7 @@ const LearningPlanDetail = () => {
     axios.delete(`http://localhost:8085/api/learningplans/${id}`)
       .then(() => {
         // After successful deletion, navigate back to the list page
-        navigate('/');
+        navigate('/'); // Or wherever you want to navigate after deletion
       })
       .catch((err) => {
         console.error('Error deleting plan:', err);
@@ -50,6 +50,7 @@ const LearningPlanDetail = () => {
         {plan.title}
       </Typography>
 
+      {/* Background Section */}
       <Box sx={{ borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Background
@@ -59,6 +60,7 @@ const LearningPlanDetail = () => {
         </Typography>
       </Box>
 
+      {/* Scope Section */}
       <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Scope
@@ -68,26 +70,17 @@ const LearningPlanDetail = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Resource Link
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          <a href={plan.resourceLink} target="_blank" rel="noopener noreferrer" style={{ color: '#1976d2' }}>
-            {plan.resourceLink}
-          </a>
-        </Typography>
-      </Box>
-
+      {/* Skills Section */}
       <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Skills
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.skills ? plan.skills.join(', ') : 'No skills provided'}
+          {plan.skills && plan.skills.length > 0 ? plan.skills.join(', ') : 'No skills provided'}
         </Typography>
       </Box>
 
+      {/* Suggested Courses Section */}
       <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Suggested Courses
@@ -99,6 +92,7 @@ const LearningPlanDetail = () => {
         </Typography>
       </Box>
 
+      {/* Deadline Section */}
       <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Deadline
@@ -108,7 +102,8 @@ const LearningPlanDetail = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ mt: 3 }}>
+      {/* Topics Section */}
+      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
         <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
           Topics
         </Typography>
@@ -119,17 +114,27 @@ const LearningPlanDetail = () => {
         </Typography>
       </Box>
 
+      {/* Tasks Section */}
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
+          Tasks
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+          {plan.tasks && plan.tasks.length > 0
+            ? plan.tasks.map((task, index) => (
+                <Box key={index} sx={{ mb: 1 }}>
+                  <strong>{task.name}</strong>: {task.description} ({task.completed ? 'Completed' : 'Not Completed'})
+                </Box>
+              ))
+            : 'No tasks available'}
+        </Typography>
+      </Box>
+
+      {/* Action Buttons */}
       <Box sx={{ mt: 4, textAlign: 'center' }}>
         <Button
           variant="outlined"
-          sx={{
-            borderColor: '#1976d2',
-            color: '#1976d2',
-            '&:hover': {
-              backgroundColor: '#1976d2',
-              color: 'white',
-            },
-          }}
+          sx={{ borderColor: '#1976d2', color: '#1976d2', '&:hover': { backgroundColor: '#1976d2', color: 'white' } }}
           onClick={() => window.history.back()} // Navigate back
         >
           Back to List

@@ -1,33 +1,26 @@
 package com.paf.Learningplatform.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.paf.Learningplatform.model.LearningPlan;
+import com.paf.Learningplatform.model.Task;
 import com.paf.Learningplatform.service.LearningPlanService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/learningplans")
 @CrossOrigin
 public class LearningPlanController {
+
     @Autowired
     private LearningPlanService service;
 
+    // ✅ Fixed POST endpoint
     @PostMapping
-    public ResponseEntity<LearningPlan> create(@RequestBody LearningPlan plan) {
-        return new ResponseEntity<>(service.create(plan), HttpStatus.CREATED);
+    public ResponseEntity<?> createLearningPlan(@RequestBody LearningPlan plan) {
+        return ResponseEntity.status(201).body(service.create(plan));
     }
 
     @GetMapping("/{userId}")
@@ -46,13 +39,29 @@ public class LearningPlanController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/plan/{id}")
-    public ResponseEntity<LearningPlan> getById(@PathVariable String id) {
-        LearningPlan plan = service.getById(id);
-        if (plan == null) {
-            return ResponseEntity.notFound().build(); // Return 404 if plan is not found
-        }
-        return ResponseEntity.ok(plan);
+    @PutMapping("/{id}/addManualTask")
+    public ResponseEntity<LearningPlan> addManualTask(
+            @PathVariable String id,
+            @RequestParam String taskName,
+            @RequestParam String taskDescription) {
+        LearningPlan updatedPlan = service.addManualTask(id, taskName, taskDescription);
+        return ResponseEntity.ok(updatedPlan);
     }
 
+    @PutMapping("/{id}/addAiGeneratedTasks")
+    public ResponseEntity<LearningPlan> addAiGeneratedTasks(@PathVariable String id, @RequestBody List<Task> aiTasks) {
+        LearningPlan updatedPlan = service.addAiGeneratedTasks(id, aiTasks);
+        return ResponseEntity.ok(updatedPlan);
+    }
+    // Endpoint to get details of a specific learning plan by ID
+    @GetMapping("/plan/{id}")
+    public ResponseEntity<LearningPlan> getPlanById(@PathVariable String id) {
+        LearningPlan plan = service.getById(id);
+        if (plan != null) {
+            return ResponseEntity.ok(plan);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
 }

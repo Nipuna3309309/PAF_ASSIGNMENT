@@ -1,22 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
-import {
-    Container,
-    TextField,
-    Button,
-    Box,
-    Typography,
-    Paper,
-    CircularProgress,
-    Grid
-} from '@mui/material';
+import { Container, TextField, Button, Box, Typography, Paper, CircularProgress, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { FormControlLabel, Checkbox } from '@mui/material';
+import debounce from 'lodash/debounce';
 
 const LearningPlanCreation = () => {
   const [learningPlan, setLearningPlan] = useState({
-    userId:'12345',
+    userId: '12345',
     title: '',
     background: '',
     scope: '',
@@ -32,87 +24,89 @@ const LearningPlanCreation = () => {
   const [courses, setCourses] = useState([]);
   const [skillInput, setSkillInput] = useState('');
   const [topicInput, setTopicInput] = useState('');
-  const [showMessage, setShowMessage] = useState(false);
+  const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [tasks, setTasks] = useState([]);
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState([]);
+  const [taskOption, setTaskOption] = useState('manual');
   const [noCoursesMessage, setNoCoursesMessage] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setLearningPlan({ ...learningPlan, [name]: value });
+    setLearningPlan({ ...learningPlan, [e.target.name]: e.target.value });
   };
 
-  const handleSkillChange = (e) => {
-    const skill = e.target.value;
-    setSkillInput(skill);
-
-    if (skill.trim() !== '') {
-      axios
-        .get(`http://localhost:8085/api/courses/skill/${skill}`)
+  const fetchCourses = debounce((skill) => {
+    if (skill) {
+      axios.get(`http://localhost:8085/api/courses/skill/${skill}`)
         .then((response) => {
-          if (response.data.length === 0) {
-            setNoCoursesMessage('No suggested courses found for this skill.');
-          } else {
-            setNoCoursesMessage('');
-          }
-
-          // Remove duplicates
-          const uniqueCourses = [...new Set(response.data)];
-          setCourses(uniqueCourses);
+          setCourses(response.data);
+          setNoCoursesMessage('');
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(() => {
           setCourses([]);
-          setNoCoursesMessage('Error fetching courses.');
+          setNoCoursesMessage('No courses found for this skill.');
         });
     } else {
       setCourses([]);
       setNoCoursesMessage('');
     }
+  }, 500);
+
+  const handleSkillChange = (e) => {
+    const value = e.target.value;
+    setSkillInput(value);
+    fetchCourses(value);
+  };
+
+  const handleTopicChange = (e) => {
+    setTopicInput(e.target.value);
   };
 
   const addSkill = () => {
-    if (skillInput.trim() !== '' && !learningPlan.skills.includes(skillInput)) {
+    if (skillInput && !learningPlan.skills.includes(skillInput)) {
       setLearningPlan({
         ...learningPlan,
         skills: [...learningPlan.skills, skillInput],
       });
       setSkillInput('');
       setCourses([]);
+      setSelectedCourse('');
     }
   };
 
   const addTopic = () => {
-    if (topicInput.trim() !== '') {
+    if (topicInput && !learningPlan.topics.includes(topicInput)) {
       setLearningPlan({
         ...learningPlan,
-        topics: [...learningPlan.topics, { name: topicInput, completed: false }],
+        topics: [...learningPlan.topics, topicInput],
       });
       setTopicInput('');
     }
   };
 
-  const handleDeadlineToggle = () => {
-    setLearningPlan({
-      ...learningPlan,
-      deadlineEnabled: !learningPlan.deadlineEnabled,
-    });
+  const handleGenerateAITasks = () => {
+    const generatedTasks = [
+      { name: 'AI Task 1', description: 'Automatically generated task 1' },
+      { name: 'AI Task 2', description: 'Automatically generated task 2' },
+    ];
+    setAiGeneratedTasks(generatedTasks);
   };
 
-  const handleSubmit = () => {
-    const suggestedCoursesObjects = learningPlan.suggestedCourses.map(course => ({ name: course }));
-  
-    const learningPlanWithCourses = {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const learningPlanWithTasks = {
       ...learningPlan,
-      suggestedCourses: suggestedCoursesObjects,
+      tasks: taskOption === 'manual' ? tasks : aiGeneratedTasks,
     };
-  
+
     setIsLoading(true);
-  
-    axios
-      .post('http://localhost:8085/api/learningplans', learningPlanWithCourses)
+
+    axios.post('http://localhost:8085/api/learningplans', learningPlanWithTasks)
       .then(() => {
         toast.success('Learning plan created successfully!');
-        setShowMessage(true);
         setLearningPlan({
           userId: '12345',
           title: '',
@@ -126,18 +120,21 @@ const LearningPlanCreation = () => {
           endDate: '',
           topics: [],
         });
-        navigate('/'); // 👈 Redirect to home page after success
+        setTasks([]);
+        setAiGeneratedTasks([]);
+        setSkillInput('');
+        setTopicInput('');
+        setNoCoursesMessage('');
+        setSelectedCourse('');
+        navigate('/');
       })
-      .catch((error) => {
-        console.log('Error:', error.response?.data || error.message);
+      .catch(() => {
         toast.error('Something went wrong. Please try again.');
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
-  
-
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -147,197 +144,104 @@ const LearningPlanCreation = () => {
         </Typography>
 
         <form onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            label="Learning Plan Name"
-            value={learningPlan.title}
-            onChange={handleInputChange}
-            name="title"
-            sx={{ mb: 3 }}
-          />
+          <TextField fullWidth label="Title" name="title" value={learningPlan.title} onChange={handleInputChange} sx={{ mb: 2 }} />
+          <TextField fullWidth label="Background" name="background" value={learningPlan.background} onChange={handleInputChange} sx={{ mb: 2 }} />
+          <TextField fullWidth label="Scope" name="scope" value={learningPlan.scope} onChange={handleInputChange} sx={{ mb: 2 }} />
+          <TextField fullWidth label="Resource Link" name="resourceLink" value={learningPlan.resourceLink} onChange={handleInputChange} sx={{ mb: 2 }} />
 
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            label="Background"
-            value={learningPlan.background}
-            onChange={handleInputChange}
-            name="background"
-            sx={{ mb: 3 }}
-          />
+          <TextField fullWidth label="Add Skills" value={skillInput} onChange={handleSkillChange} sx={{ mb: 2 }} />
+          <Button variant="contained" onClick={addSkill} sx={{ mb: 2 }}>Add Skill</Button>
+          <Box sx={{ mb: 2 }}>{learningPlan.skills.map((skill, index) => (<Typography key={index}>{skill}</Typography>))}</Box>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
-            label="Scope"
-            value={learningPlan.scope}
-            onChange={handleInputChange}
-            name="scope"
-            sx={{ mb: 3 }}
-          />
-
-          <TextField
-            fullWidth
-            variant="outlined"
-            label="Resource Link"
-            value={learningPlan.resourceLink}
-            onChange={handleInputChange}
-            name="resourceLink"
-            sx={{ mb: 3 }}
-          />
-
-          {/* Skills Section */}
-          <Box sx={{ mb: 3 }}>
-            <input
-              type="text"
-              value={skillInput}
-              onChange={handleSkillChange}
-              placeholder="Enter Skill"
-              className="border p-2 rounded w-full mb-2"
-            />
-            <button
-              type="button"
-              className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
-              onClick={addSkill}
-            >
-              Add Skill
-            </button>
-
-            <div>
-              {learningPlan.skills.map((skill, index) => (
-                <span key={index} style={{ marginRight: '10px' }}>
-                  {skill}{' '}
-                  <button
-                    type="button"
-                    onClick={() => removeSkill(skill)}
-                    className="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded"
-                  >
-                    ❌
-                  </button>
-                </span>
-              ))}
-            </div>
-          </Box>
-
-          {/* Suggested Courses Section */}
           {courses.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Suggested Courses</label>
-              <select
-                className="block w-full p-2.5 border bg-gray-50 rounded-lg"
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Suggested Courses</InputLabel>
+              <Select
+                value={selectedCourse}
                 onChange={(e) => {
-                  const selectedCourse = e.target.value;
-                  if (!learningPlan.suggestedCourses.includes(selectedCourse)) {
+                  const selected = e.target.value;
+                  setSelectedCourse(selected);
+                  if (!learningPlan.suggestedCourses.includes(selected)) {
                     setLearningPlan({
                       ...learningPlan,
-                      suggestedCourses: [
-                        ...learningPlan.suggestedCourses,
-                        selectedCourse,
-                      ],
+                      suggestedCourses: [...learningPlan.suggestedCourses, selected],
                     });
                   }
                 }}
               >
-                <option value="">Select a course</option>
                 {courses.map((course, index) => (
-                  <option key={index} value={course}>
-                    {course}
-                  </option>
+                  <MenuItem key={index} value={course}>{course}</MenuItem>
                 ))}
-              </select>
-            </Box>
+              </Select>
+            </FormControl>
           )}
-
-          <div>
-            {learningPlan.suggestedCourses.map((course, index) => (
-              <div key={index} className="flex justify-between items-center mb-2">
-                {course}{' '}
-                <button
-                  type="button"
-                  onClick={() => removeCourse(course)}
-                  className="bg-transparent hover:bg-red-500 text-red-700 font-semibold hover:text-white py-2 px-4 border border-red-500 hover:border-transparent rounded"
-                >
-                  ❌
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {noCoursesMessage && <p className="text-red-500">{noCoursesMessage}</p>}
-
-          {/* Deadline Toggle */}
-          <Box sx={{ mb: 3 }}>
-            <input
-              type="checkbox"
-              checked={learningPlan.deadlineEnabled}
-              onChange={handleDeadlineToggle}
-              className="mr-2"
-            />
-            <label>Enable Deadline</label>
-          </Box>
-
-          {learningPlan.deadlineEnabled && (
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                type="date"
-                fullWidth
-                value={learningPlan.startDate}
-                onChange={handleInputChange}
-                name="startDate"
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                type="date"
-                fullWidth
-                value={learningPlan.endDate}
-                onChange={handleInputChange}
-                name="endDate"
-              />
-            </Box>
-          )}
-
-          {/* Topics Section */}
-          <Box sx={{ mb: 3 }}>
-            <input
-              type="text"
-              value={topicInput}
-              onChange={(e) => setTopicInput(e.target.value)}
-              placeholder="Enter Topic"
-              className="border p-2 rounded w-full mb-2"
-            />
-            <button
-              type="button"
-              className="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
-              onClick={addTopic}
-            >
-              Add Topic
-            </button>
-
-            <div>
-              {learningPlan.topics.map((topic, index) => (
-                <div key={index}>{topic.name}</div>
+          {noCoursesMessage && <Typography color="error">{noCoursesMessage}</Typography>}
+          {learningPlan.suggestedCourses.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2">Added Courses:</Typography>
+              {learningPlan.suggestedCourses.map((course, index) => (
+                <Typography key={index}>• {course}</Typography>
               ))}
-            </div>
+            </Box>
+          )}
+
+          <TextField fullWidth label="Add Topic" value={topicInput} onChange={handleTopicChange} sx={{ mb: 2 }} />
+          <Button variant="contained" onClick={addTopic} sx={{ mb: 2 }}>Add Topic</Button>
+          <Box sx={{ mb: 2 }}>{learningPlan.topics.map((topic, index) => (<Typography key={index}>{topic}</Typography>))}</Box>
+
+          <Box sx={{ mb: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Task Creation Method</InputLabel>
+              <Select value={taskOption} onChange={(e) => setTaskOption(e.target.value)}>
+                <MenuItem value="manual">Manual Task Creation</MenuItem>
+                <MenuItem value="ai">AI-Generated Tasks</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
 
-          {/* Submit Button */}
+          {taskOption === 'manual' && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6">Add Manual Task</Typography>
+              <TextField fullWidth label="Task Name" value={taskName} onChange={(e) => setTaskName(e.target.value)} sx={{ mb: 2 }} />
+              <TextField fullWidth label="Task Description" value={taskDescription} onChange={(e) => setTaskDescription(e.target.value)} sx={{ mb: 2 }} />
+              <Button variant="contained" onClick={() => {
+                if (taskName && taskDescription) {
+                  const newTask = { name: taskName, description: taskDescription };
+                  setTasks([...tasks, newTask]);
+                  setTaskName('');
+                  setTaskDescription('');
+                }
+              }}>Add Task</Button>
+              <Box sx={{ mt: 2 }}>{tasks.map((task, index) => (<Box key={index} sx={{ mb: 1 }}><Typography>{task.name}: {task.description}</Typography></Box>))}</Box>
+            </Box>
+          )}
+
+          {taskOption === 'ai' && (
+            <Box sx={{ mb: 3 }}>
+              <Button variant="contained" onClick={handleGenerateAITasks}>Generate AI Tasks</Button>
+              <Box sx={{ mt: 2 }}>{aiGeneratedTasks.length > 0 ? (
+                aiGeneratedTasks.map((task, index) => (
+                  <Box key={index} sx={{ mb: 1 }}><Typography>{task.name}: {task.description}</Typography></Box>
+                ))
+              ) : (
+                <Typography>No AI tasks generated yet.</Typography>
+              )}</Box>
+            </Box>
+          )}
+
+          <Box sx={{ mb: 3 }}>
+            <FormControlLabel control={<Checkbox checked={learningPlan.deadlineEnabled} onChange={(e) => setLearningPlan({ ...learningPlan, deadlineEnabled: e.target.checked })} />} label="Set Deadline" />
+            {learningPlan.deadlineEnabled && (
+              <>
+                <TextField label="Start Date" type="date" fullWidth value={learningPlan.startDate} onChange={(e) => setLearningPlan({ ...learningPlan, startDate: e.target.value })} sx={{ mb: 2 }} InputLabelProps={{ shrink: true }} />
+                <TextField label="End Date" type="date" fullWidth value={learningPlan.endDate} onChange={(e) => setLearningPlan({ ...learningPlan, endDate: e.target.value })} sx={{ mb: 2 }} InputLabelProps={{ shrink: true }} />
+              </>
+            )}
+          </Box>
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/dashboard')}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isLoading || !learningPlan.skills.length}
-            >
+            <Button variant="outlined" onClick={() => navigate('/dashboard')}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={isLoading || !learningPlan.skills.length}>
               {isLoading ? <CircularProgress size={24} /> : 'Create Learning Plan'}
             </Button>
           </Box>

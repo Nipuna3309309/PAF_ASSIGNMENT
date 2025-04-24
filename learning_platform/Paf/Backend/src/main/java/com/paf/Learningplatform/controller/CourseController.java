@@ -53,4 +53,5 @@ public class CourseController {
         List<String> courseNames = courses.stream().map(Course::getName).toList();
         return ResponseEntity.ok(courseNames);
     }
+
 }

@@ -10,4 +10,5 @@ import com.paf.Learningplatform.model.LearningPlan;
 @Repository
 public interface LearningPlanRepository extends MongoRepository<LearningPlan, String> {
     List<LearningPlan> findByUserId(String userId);
+
 }
