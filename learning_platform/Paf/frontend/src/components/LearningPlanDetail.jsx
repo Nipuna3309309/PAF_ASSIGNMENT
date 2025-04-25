@@ -1,18 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, CircularProgress, Typography, Button } from '@mui/material';
+import {
+  Box, Button, CircularProgress, Typography, TextField,
+  Chip, Autocomplete, Checkbox, FormControlLabel, Dialog,
+  DialogTitle, DialogContent, DialogActions, Card, Divider, Grid
+} from '@mui/material';
 import axios from 'axios';
 
 const LearningPlanDetail = () => {
-  const { id } = useParams(); // Extract id from URL
-  const navigate = useNavigate(); // For navigation
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [editablePlan, setEditablePlan] = useState(null);
+  const [newSkill, setNewSkill] = useState('');
+  const [suggestedCoursesForSkill, setSuggestedCoursesForSkill] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
 
   useEffect(() => {
     axios.get(`http://localhost:8085/api/learningplans/plan/${id}`)
       .then((res) => {
         setPlan(res.data);
+        setEditablePlan(res.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -21,23 +31,89 @@ const LearningPlanDetail = () => {
       });
   }, [id]);
 
-  const handleDelete = () => {
-    axios.delete(`http://localhost:8085/api/learningplans/${id}`)
-      .then(() => {
-        // After successful deletion, navigate back to the list page
-        navigate('/'); // Or wherever you want to navigate after deletion
+  const handleEditToggle = () => setEditMode(true);
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    setEditablePlan(plan);
+    setNewSkill('');
+    setSelectedCourses([]);
+    setSuggestedCoursesForSkill([]);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditablePlan(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSkillRemove = (skillToRemove) => {
+    const updatedSkills = editablePlan.skills.filter(skill => skill !== skillToRemove);
+    const updatedCourses = editablePlan.suggestedCourses.filter(course => course.skill !== skillToRemove);
+    setEditablePlan({ ...editablePlan, skills: updatedSkills, suggestedCourses: updatedCourses });
+  };
+
+  const fetchSuggestedCourses = (skillName) => {
+    if (!skillName) return;
+
+    axios.get(`http://localhost:8085/api/learningplans/skill/${skillName}`)
+      .then((res) => {
+        setSuggestedCoursesForSkill(res.data.map(courseName => ({ name: courseName })));
       })
       .catch((err) => {
-        console.error('Error deleting plan:', err);
+        console.error('Error fetching suggested courses:', err);
+        setSuggestedCoursesForSkill([]);
       });
   };
 
+  const handleAddSkillAndCourses = () => {
+    if (!newSkill.trim()) return;
+
+    const newSkills = [...(editablePlan.skills || []), newSkill];
+    const newCourses = [
+      ...(editablePlan.suggestedCourses || []),
+      ...selectedCourses.map(course => ({ name: course.name, skill: newSkill }))
+    ];
+
+    setEditablePlan(prev => ({
+      ...prev,
+      skills: newSkills,
+      suggestedCourses: newCourses
+    }));
+
+    setNewSkill('');
+    setSuggestedCoursesForSkill([]);
+    setSelectedCourses([]);
+  };
+
+  const handleCourseChange = (index, value) => {
+    const updatedCourses = [...editablePlan.suggestedCourses];
+    updatedCourses[index].name = value;
+    setEditablePlan({ ...editablePlan, suggestedCourses: updatedCourses });
+  };
+
+  const handleTaskChange = (index, field, value) => {
+    const updatedTasks = [...editablePlan.tasks];
+    updatedTasks[index][field] = value;
+    setEditablePlan({ ...editablePlan, tasks: updatedTasks });
+  };
+
+  const handleSaveEdit = () => {
+    axios.put(`http://localhost:8085/api/learningplans/${id}`, editablePlan)
+      .then((res) => {
+        setPlan(res.data);
+        setEditMode(false);
+      })
+      .catch((err) => {
+        console.error('Error saving plan:', err);
+      });
+  };
+
+  const handleDelete = () => {
+    axios.delete(`http://localhost:8085/api/learningplans/${id}`)
+      .then(() => navigate('/'))
+      .catch((err) => console.error('Error deleting plan:', err));
+  };
+
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
+    return <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>;
   }
 
   if (!plan) {
@@ -46,109 +122,173 @@ const LearningPlanDetail = () => {
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto', p: 3 }}>
-      <Typography variant="h3" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 3 }}>
-        {plan.title}
-      </Typography>
+      {!editMode ? (
+        <>
+          <Card sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>{plan.title}</Typography>
+            <Divider sx={{ mb: 2 }} />
 
-      {/* Background Section */}
-      <Box sx={{ borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Background
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.background}
-        </Typography>
-      </Box>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" fontWeight="bold">Background</Typography>
+                <Typography color="text.secondary">{plan.background}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" fontWeight="bold">Scope</Typography>
+                <Typography color="text.secondary">{plan.scope}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" fontWeight="bold">Resource Link</Typography>
+                <Typography color="text.secondary">
+                  <a href={plan.resourceLink} target="_blank" rel="noopener noreferrer">{plan.resourceLink}</a>
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle1" fontWeight="bold">Duration</Typography>
+                <Typography color="text.secondary">
+                  {new Date(plan.startDate).toLocaleDateString()} to {new Date(plan.endDate).toLocaleDateString()}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Card>
 
-      {/* Scope Section */}
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Scope
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.scope}
-        </Typography>
-      </Box>
+          <Card sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom>Skills</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {plan.skills?.map((skill, idx) => (
+                <Chip key={idx} label={skill} color="primary" variant="outlined" />
+              ))}
+            </Box>
+          </Card>
 
-      {/* Skills Section */}
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Skills
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.skills && plan.skills.length > 0 ? plan.skills.join(', ') : 'No skills provided'}
-        </Typography>
-      </Box>
+          <Card sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom>Suggested Courses</Typography>
+            <Box sx={{ ml: 2 }}>
+              {plan.suggestedCourses?.map((course, idx) => (
+                <Typography key={idx} sx={{ mb: 1 }}>• {course.name}</Typography>
+              ))}
+            </Box>
+          </Card>
 
-      {/* Suggested Courses Section */}
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Suggested Courses
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.suggestedCourses && plan.suggestedCourses.length > 0
-            ? plan.suggestedCourses.map(course => course.name).join(', ')
-            : 'No suggested courses available'}
-        </Typography>
-      </Box>
-
-      {/* Deadline Section */}
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Deadline
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.deadlineEnabled ? `From ${plan.startDate} to ${plan.endDate}` : 'No deadline set'}
-        </Typography>
-      </Box>
-
-      {/* Topics Section */}
-      <Box sx={{ mt: 3, borderBottom: 2, borderColor: 'grey.300', pb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Topics
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.topics && plan.topics.length > 0
-            ? plan.topics.map(topic => topic.name).join(', ')
-            : 'No topics available'}
-        </Typography>
-      </Box>
-
-      {/* Tasks Section */}
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 500, mb: 1 }}>
-          Tasks
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          {plan.tasks && plan.tasks.length > 0
-            ? plan.tasks.map((task, index) => (
-                <Box key={index} sx={{ mb: 1 }}>
-                  <strong>{task.name}</strong>: {task.description} ({task.completed ? 'Completed' : 'Not Completed'})
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h5" fontWeight="bold" gutterBottom>Tasks</Typography>
+            <Box>
+              {plan.tasks?.map((task, idx) => (
+                <Box key={idx} sx={{ mb: 2 }}>
+                  <Typography><strong>{task.name}</strong></Typography>
+                  <Typography variant="body2" color="text.secondary">{task.description}</Typography>
+                  <Chip
+                    label={task.completed ? "Completed" : "Not Completed"}
+                    color={task.completed ? "success" : "warning"}
+                    size="small"
+                    sx={{ mt: 0.5 }}
+                  />
                 </Box>
-              ))
-            : 'No tasks available'}
-        </Typography>
-      </Box>
+              ))}
+            </Box>
+          </Card>
 
-      {/* Action Buttons */}
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Button
-          variant="outlined"
-          sx={{ borderColor: '#1976d2', color: '#1976d2', '&:hover': { backgroundColor: '#1976d2', color: 'white' } }}
-          onClick={() => window.history.back()} // Navigate back
-        >
-          Back to List
-        </Button>
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Button variant="outlined" onClick={handleEditToggle}>Edit</Button>
+            <Button variant="contained" color="error" sx={{ ml: 2 }} onClick={handleDelete}>Delete</Button>
+          </Box>
+        </>
+      ) : (
+        <Dialog open={editMode} onClose={handleCancelEdit} fullWidth maxWidth="md">
+          <DialogTitle>Edit Learning Plan</DialogTitle>
+          <DialogContent dividers>
+            <TextField
+              fullWidth
+              label="Title"
+              value={editablePlan.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            {['background', 'scope', 'resourceLink', 'startDate', 'endDate'].map(field => (
+              <TextField
+                key={field}
+                fullWidth
+                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                type={field.includes('Date') ? 'date' : 'text'}
+                value={editablePlan[field]}
+                onChange={(e) => handleInputChange(field, e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2 }}
+              />
+            ))}
 
-        <Button
-          variant="contained"
-          color="error"
-          sx={{ ml: 2 }}
-          onClick={handleDelete} // Delete the plan
-        >
-          Delete Learning Plan
-        </Button>
-      </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6">Skills</Typography>
+              {editablePlan.skills?.map((skill, idx) => (
+                <Chip key={idx} label={skill} onDelete={() => handleSkillRemove(skill)} sx={{ mr: 1, mb: 1 }} />
+              ))}
+              <TextField
+                fullWidth
+                label="New Skill"
+                value={newSkill}
+                onChange={(e) => {
+                  setNewSkill(e.target.value);
+                  fetchSuggestedCourses(e.target.value);
+                }}
+                sx={{ mt: 1, mb: 1 }}
+              />
+              <Autocomplete
+                multiple
+                options={suggestedCoursesForSkill}
+                getOptionLabel={(option) => option.name}
+                value={selectedCourses}
+                onChange={(e, newValue) => setSelectedCourses(newValue)}
+                renderInput={(params) => <TextField {...params} label="Select Suggested Courses" />}
+              />
+              <Button onClick={handleAddSkillAndCourses} variant="outlined" sx={{ mt: 1 }}>Add Skill & Courses</Button>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6">Suggested Courses</Typography>
+              {editablePlan.suggestedCourses?.map((course, idx) => (
+                <TextField
+                  key={idx}
+                  fullWidth
+                  value={course.name}
+                  onChange={(e) => handleCourseChange(idx, e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Box>
+
+            <Box>
+              <Typography variant="h6">Tasks</Typography>
+              {editablePlan.tasks?.map((task, idx) => (
+                <Box key={idx} sx={{ mb: 2 }}>
+                  <TextField
+                    label="Task Name"
+                    fullWidth
+                    value={task.name}
+                    onChange={(e) => handleTaskChange(idx, 'name', e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
+                  <TextField
+                    label="Task Description"
+                    fullWidth
+                    value={task.description}
+                    onChange={(e) => handleTaskChange(idx, 'description', e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
+                  <FormControlLabel
+                    control={<Checkbox checked={task.completed} onChange={(e) => handleTaskChange(idx, 'completed', e.target.checked)} />}
+                    label="Completed"
+                  />
+                </Box>
+              ))}
+            </Box>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={handleCancelEdit}>Cancel</Button>
+            <Button onClick={handleSaveEdit} variant="contained">Save</Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 };

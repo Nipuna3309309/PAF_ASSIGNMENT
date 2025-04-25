@@ -53,6 +53,7 @@ public class LearningPlanController {
         LearningPlan updatedPlan = service.addAiGeneratedTasks(id, aiTasks);
         return ResponseEntity.ok(updatedPlan);
     }
+
     // Endpoint to get details of a specific learning plan by ID
     @GetMapping("/plan/{id}")
     public ResponseEntity<LearningPlan> getPlanById(@PathVariable String id) {
@@ -63,5 +64,6 @@ public class LearningPlanController {
             return ResponseEntity.notFound().build();
         }
     }
+
     
 }
