@@ -7,11 +7,11 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,21 +27,20 @@ public class GoogleAuthController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private GoogleIdTokenVerifier verifier;
 
-    @Autowired
-    public GoogleAuthController(@Value("${spring.security.oauth2.client.registration.google.client-id}") String clientId) {
+    @PostConstruct
+    public void init() {
+        // Initialize the GoogleIdTokenVerifier using the clientId
         NetHttpTransport transport = new NetHttpTransport();
         JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
                 .setAudience(Collections.singletonList(clientId))
                 .build();
     }
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
     @PostMapping("/google-login")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
         try {
