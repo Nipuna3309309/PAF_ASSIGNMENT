@@ -44,7 +44,7 @@ public class ProgressUpdateController {
     
 
     //Get particular users ProgressUpdates
-    @GetMapping("/user/{userId}/progress-updates")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<List<ProgressUpdateDTO>> getProgressUpdatesByUserId(@PathVariable String userId) {
         List<ProgressUpdateDTO> progressUpdates = progressUpdateService.getProgressUpdatesByUserId(userId);
         return new ResponseEntity<>(progressUpdates, HttpStatus.OK);
