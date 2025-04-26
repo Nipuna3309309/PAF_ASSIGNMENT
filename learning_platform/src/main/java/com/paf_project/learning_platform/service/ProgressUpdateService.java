@@ -4,7 +4,9 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.paf_project.learning_platform.dto.MonthYearDTO;
 import com.paf_project.learning_platform.dto.ProgressUpdateDTO;
@@ -17,9 +19,11 @@ import com.paf_project.learning_platform.repository.SkillRepository;
 import com.paf_project.learning_platform.repository.UserRepository;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 
 @Service
@@ -157,27 +161,80 @@ public class ProgressUpdateService {
     }
 
 
-    public ProgressUpdate editProgressUpdate(ObjectId id, ProgressUpdate updatedProgress) {
-        Optional<ProgressUpdate> existingProgressOpt = progressUpdateRepository.findById(id);
+   public String editProgressUpdate(ObjectId id, ProgressUpdateDTO dto) {
+    // 1. Load or 404
+    ProgressUpdate existing = progressUpdateRepository.findById(id)
+        .orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "ProgressUpdate with ID " + id + " not found"));
 
-        if (existingProgressOpt.isPresent()) {
-            ProgressUpdate existingProgress = existingProgressOpt.get();
+    // 2. Capture original skills
+    List<Skill> originalList = existing.getSkills();
+    Set<Skill> originalSet = new HashSet<>(originalList);
 
-            // Update all fields
-            existingProgress.setName(updatedProgress.getName());
-            existingProgress.setIssuingOrganization(updatedProgress.getIssuingOrganization());
-            existingProgress.setIssueDate(updatedProgress.getIssueDate());
-            existingProgress.setExpireDate(updatedProgress.getExpireDate());
-            existingProgress.setCredentialId(updatedProgress.getCredentialId());
-            existingProgress.setCredentialUrl(updatedProgress.getCredentialUrl());
-            existingProgress.setSkills(updatedProgress.getSkills());
-            existingProgress.setMediaUrl(updatedProgress.getMediaUrl());
+    // 3. Process incoming skills
+    List<Skill> processed = skillService.processSkillsForProgressUpdate(
+        existing.getUser().getId(), dto.getSkills());
+    Set<Skill> updatedSet = new HashSet<>(processed);
 
-            return progressUpdateRepository.save(existingProgress);
-        } else {
-            throw new RuntimeException("Progress update with ID " + id + " not found.");
+    // 4. Compute removed vs added
+    Set<Skill> removed = new HashSet<>(originalSet);
+    removed.removeAll(updatedSet);
+
+    Set<Skill> added = new HashSet<>(updatedSet);
+    added.removeAll(originalSet);
+
+    // 5. Update the rest of your fields...
+    existing.setName(dto.getName());
+    existing.setIssuingOrganization(dto.getIssuingOrganization());
+    existing.setIssueDate(new MonthYear(dto.getIssueDate().getMonth(),
+                                        dto.getIssueDate().getYear()));
+    existing.setExpireDate(new MonthYear(dto.getExpireDate().getMonth(),
+                                         dto.getExpireDate().getYear()));
+    existing.setCredentialId(dto.getCredentialId());
+    existing.setCredentialUrl(dto.getCredentialUrl());
+    existing.setMediaUrl(dto.getMediaUrl());
+
+    // 6. Set exactly the new skill list (convert Set → List)
+    existing.setSkills(new ArrayList<>(updatedSet));
+
+    // 7. Persist the ProgressUpdate
+    progressUpdateRepository.save(existing);
+
+    // 8. Sync the User’s skills
+    User user = existing.getUser();
+    if (user == null) {
+        throw new IllegalStateException("ProgressUpdate has no associated User");
+    }
+    if (user.getSkills() == null) {
+        user.setSkills(new ArrayList<>());
+    }
+
+    // Add newly attached
+    for (Skill skill : added) {
+        if (user.getSkills().stream()
+                .noneMatch(s -> s.getName().equalsIgnoreCase(skill.getName()))) {
+            user.getSkills().add(skill);
         }
     }
+
+    // Remove ones no longer used by any other PU
+    for (Skill skill : removed) {
+        boolean stillUsed = user.getProgressUpdates().stream()
+            .filter(pu -> !pu.getId().equals(id))
+            .anyMatch(pu -> pu.getSkills().contains(skill));
+        if (!stillUsed) {
+            user.getSkills().removeIf(s -> s.getName().equalsIgnoreCase(skill.getName()));
+        }
+    }
+
+    // 9. Save the user
+    userRepository.save(user);
+
+    return "Progress update edited successfully!";
+}
+
+
 
 
     public void deleteProgressUpdate(ObjectId id) {

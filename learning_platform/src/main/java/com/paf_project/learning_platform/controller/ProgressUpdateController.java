@@ -51,13 +51,14 @@ public class ProgressUpdateController {
     }
 
     //edit Progress Update
+  
     @PutMapping("/{id}")
-    public ResponseEntity<ProgressUpdate> editProgressUpdate(
-            @PathVariable ObjectId id, 
-            @RequestBody ProgressUpdate updatedProgress) {
-        
-        ProgressUpdate updated = progressUpdateService.editProgressUpdate(id, updatedProgress);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<String> editProgressUpdate(
+            @PathVariable ObjectId id,
+            @RequestBody ProgressUpdateDTO dto) {
+    
+        String result = progressUpdateService.editProgressUpdate(id, dto);
+        return ResponseEntity.ok(result);
     }
 
     //Delete Progress Update

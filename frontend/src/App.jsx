@@ -1,6 +1,7 @@
 import "./App.css";
 import CreateProgressUpdate from "./components/CreateProgressUpdate";
 import CreateSkills from "./components/CreateSkills";
+import EditProgressUpdate from "./components/EditProgressUpdate";
 import ListProgressUpdate from "./components/ListProgressUpdate";
 import ListUserProgressUpdates from "./components/ListUserProgressUpdates";
 import UserProfileProgressPage from "./components/UserProfileProgressPage";
@@ -32,6 +33,11 @@ function App() {
           />
 
           <Route path="/createSkills" element={<CreateSkills />} />
+
+          <Route
+            path="/editProgressUpdate/:id"
+            element={<EditProgressUpdate />}
+          />
         </Routes>
       </BrowserRouter>
     </>
