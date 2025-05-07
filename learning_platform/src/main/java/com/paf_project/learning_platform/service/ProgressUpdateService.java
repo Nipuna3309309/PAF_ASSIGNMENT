@@ -235,8 +235,6 @@ public class ProgressUpdateService {
 }
 
 
-
-
     public void deleteProgressUpdate(ObjectId id) {
         Optional<ProgressUpdate> optionalProgressUpdate = progressUpdateRepository.findById(id);
     
