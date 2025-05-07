@@ -1,5 +1,6 @@
 package com.paf.Learningplatform.controller;
 
+import com.paf.Learningplatform.dto.AiTaskRequest;
 import com.paf.Learningplatform.model.LearningPlan;
 import com.paf.Learningplatform.model.Task;
 import com.paf.Learningplatform.service.LearningPlanService;
@@ -17,7 +18,6 @@ public class LearningPlanController {
     @Autowired
     private LearningPlanService service;
 
-    // ✅ Fixed POST endpoint
     @PostMapping
     public ResponseEntity<?> createLearningPlan(@RequestBody LearningPlan plan) {
         return ResponseEntity.status(201).body(service.create(plan));
@@ -54,7 +54,6 @@ public class LearningPlanController {
         return ResponseEntity.ok(updatedPlan);
     }
 
-    // Endpoint to get details of a specific learning plan by ID
     @GetMapping("/plan/{id}")
     public ResponseEntity<LearningPlan> getPlanById(@PathVariable String id) {
         LearningPlan plan = service.getById(id);
@@ -65,4 +64,8 @@ public class LearningPlanController {
         }
     }
 
+    @PostMapping("/ai/generateTasks")
+    public ResponseEntity<List<Task>> generateTasks(@RequestBody AiTaskRequest request) {
+        return ResponseEntity.ok(service.generateAiTasks(request.getTopic()));
+    }
 }

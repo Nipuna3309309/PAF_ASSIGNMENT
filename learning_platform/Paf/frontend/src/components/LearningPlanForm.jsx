@@ -223,23 +223,15 @@ const LearningPlanCreation = () => {
     });
   };
 
-  const handleGenerateAITasks = () => {
-    setIsGeneratingAI(true);
-    
-    // Simulate AI task generation with a timeout
-    setTimeout(() => {
-      const generatedTasks = [
-        { name: 'Research fundamentals', description: 'Study the core concepts of selected topics' },
-        { name: 'Practice application', description: 'Apply learned skills in a small project' },
-        { name: 'Create documentation', description: 'Document your learning progress and insights' },
-        { name: 'Peer review', description: 'Get feedback from others on your work' }
-      ];
-      setAiGeneratedTasks(generatedTasks);
-      setIsGeneratingAI(false);
-      setAiGenerated(true);
-    }, 1500);
+  const handleAiTaskGenerate = () => {
+    axios.post('http://localhost:8085/api/learningplans/ai/generateTasks', {
+      topic: "Machine Learning"
+    }).then(res => {
+      const aiTasks = res.data;
+      axios.put(`http://localhost:8085/api/learningplans/${planId}/addAiGeneratedTasks`, aiTasks)
+        .then(() => window.location.reload());
+    }).catch(err => console.error("Failed to fetch AI tasks", err));
   };
-
   const handleSubmit = () => {
     const learningPlanWithTasks = {
       ...learningPlan,
@@ -512,7 +504,7 @@ const LearningPlanCreation = () => {
                     <Button 
                       variant="contained" 
                       startIcon={<AutoAwesomeIcon />} 
-                      onClick={handleGenerateAITasks}
+                      onClick={handleAiTaskGenerate}
                       disabled={isGeneratingAI || aiGenerated}
                       color="secondary"
                       sx={{ px: 3 }}

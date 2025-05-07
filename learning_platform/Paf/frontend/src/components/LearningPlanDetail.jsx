@@ -202,6 +202,8 @@ const LearningPlanDetail = () => {
   }
 
   return (
+    
+    
     <Box sx={{ maxWidth: 1000, mx: 'auto', p: { xs: 2, md: 4 } }}>
       {!editMode ? (
         <>
