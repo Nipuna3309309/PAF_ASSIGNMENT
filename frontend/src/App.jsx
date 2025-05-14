@@ -7,6 +7,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/certificate/:courseId" element={<CertificatePage />} />
+          <Route path="/learning-progress" element={<LearningProgressPage />} />
+          <Route path="/my-course/:courseId" element={<MyCourseDetail />} />
         </Routes>
       </BrowserRouter>
     </>
