@@ -15,24 +15,19 @@ public class LearningPlan {
     @Id
     private String id;
 
-    private String userId;       // Track who created it
+    private String userId;
 
-    // Step 1 - Basic Info
     private String title;
     private String background;
     private String scope;
 
-    // Step 2 - Skills and Courses
     private List<String> skills;
-    private List<String> relatedCourseIds;  // enrolled course ids
+    private List<String> relatedCourseIds;
 
-    // Step 3 - Topics
     private List<String> topics;
 
-    // Step 4 - Tasks
     private List<Task> tasks;
 
-    // Step 5 - Timeline
     private String startDate;
     private String endDate;
 
@@ -42,6 +37,6 @@ public class LearningPlan {
     public static class Task {
         private String taskName;
         private String taskDescription;
-        private boolean completed; // for ticking
+        private boolean completed;
     }
 }
