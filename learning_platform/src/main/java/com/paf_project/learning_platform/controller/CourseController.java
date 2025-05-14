@@ -9,7 +9,7 @@ import com.paf_project.learning_platform.service.CourseService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/dsrcourses")
+@RequestMapping("/api/courses")
 @CrossOrigin(origins = "http://localhost:5173")
 public class CourseController {
 
