@@ -5,7 +5,9 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        <Routes></Routes>
+        <Routes>
+          <Route path="/certificate/:courseId" element={<CertificatePage />} />
+        </Routes>
       </BrowserRouter>
     </>
   );
