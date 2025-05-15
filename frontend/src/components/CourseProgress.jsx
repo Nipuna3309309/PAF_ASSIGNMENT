@@ -13,7 +13,7 @@ const CourseProgress = () => {
 
   const fetchCourses = async () => {
     try {
-      const res = await fetch("http://localhost:8070/api/dsrcourses");
+      const res = await fetch("http://localhost:8070/api/courses");
       setCourses(await res.json());
     } catch (err) {
       console.error("Error fetching courses:", err);
@@ -23,7 +23,7 @@ const CourseProgress = () => {
   const fetchMyCourses = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8070/api/dsrcourses/enrolled/${userId}`
+        `http://localhost:8070/api/courses/enrolled/${userId}`
       );
       setMyCourses(await res.json());
     } catch (err) {
@@ -38,7 +38,7 @@ const CourseProgress = () => {
 
   const handleEnroll = async (courseId) => {
     const res = await fetch(
-      `http://localhost:8070/api/dsrcourses/${courseId}/enroll/${userId}`,
+      `http://localhost:8070/api/courses/${courseId}/enroll/${userId}`,
       { method: "POST" }
     );
     if (res.ok) fetchMyCourses();
@@ -46,7 +46,7 @@ const CourseProgress = () => {
 
   const handleFinish = async (courseId) => {
     const res = await fetch(
-      `http://localhost:8070/api/dsrcourses/${courseId}/complete/${userId}`,
+      `http://localhost:8070/api/courses/${courseId}/complete/${userId}`,
       { method: "POST" }
     );
     if (res.ok) fetchMyCourses();
@@ -56,7 +56,7 @@ const CourseProgress = () => {
   const handleUnenroll = async (courseId) => {
     if (!window.confirm("Unenroll from this course?")) return;
     const res = await fetch(
-      `http://localhost:8070/api/dsrcourses/${courseId}/enroll/${userId}`,
+      `http://localhost:8070/api/courses/${courseId}/enroll/${userId}`,
       { method: "DELETE" }
     );
     if (res.ok) {
