@@ -7,6 +7,8 @@ import MyCourseDetail from "./pages/MyCourseDetail";
 import LearningProgressPage from "./pages/LearningProgressPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CertificatePage from "./pages/CertificatePage";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -20,6 +22,15 @@ function App() {
         <Route path="/my-course/:courseId" element={<MyCourseDetail />} />
 
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
