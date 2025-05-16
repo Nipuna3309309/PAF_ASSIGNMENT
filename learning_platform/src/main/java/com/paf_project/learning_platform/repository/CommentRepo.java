@@ -8,7 +8,8 @@ import com.paf_project.learning_platform.model.CommentLike;
 import java.util.List;
 
 public interface CommentRepo extends MongoRepository<Comment, String> {
-    List<CommentLike> findByPostId(String postId);
+    // List<CommentLike> findByPostId(String postId);
+    List<Comment> findByPostId(String postId); // Must match what's expected
 
     long countByPostId(String postId);
 }

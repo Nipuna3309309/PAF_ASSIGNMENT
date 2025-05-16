@@ -3,7 +3,7 @@ package com.paf_project.learning_platform.repository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import com.google.api.services.storage.model.Notification;
+import com.paf_project.learning_platform.model.Notification;
 
 import java.util.List;
 

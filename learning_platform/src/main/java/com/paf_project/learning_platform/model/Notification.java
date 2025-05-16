@@ -36,4 +36,12 @@ public class Notification {
             createdAt = LocalDateTime.now();
         }
     }
+
+    public void setRead(boolean isRead) {
+        this.isRead = isRead;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
 }
