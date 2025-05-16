@@ -9,10 +9,12 @@ import UnauthorizedPage from "./pages/UnauthorizedPage";
 import CertificatePage from "./pages/CertificatePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
+
 import LearningPlanPage from './pages/LearningPlanPage';
 import LearningPlanDetailPage from './pages/LearningPlanDetailPage';
 import AIGenerateTasksPage from "./pages/AIGenerateTasksPage";
 import ShareLearningPlan from './pages/ShareLearningPlan';
+
 
 function App() {
   return (
@@ -26,6 +28,7 @@ function App() {
         <Route path="/my-course/:courseId" element={<MyCourseDetail />} />
 
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
 
         <Route path="/learningplan" element={<LearningPlanPage />} />
           <Route path="/learningplan/view/:planId" element={<LearningPlanDetailPage />} />
