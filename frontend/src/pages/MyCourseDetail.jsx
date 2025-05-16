@@ -17,7 +17,7 @@ const MyCourseDetail = () => {
     const fetchCourse = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8070/api/dsrcourses/${courseId}/user/${userId}`
+          `http://localhost:8070/api/courses/${courseId}/user/${userId}`
         );
         if (!res.ok) {
           throw new Error("Course not found or unauthorized");

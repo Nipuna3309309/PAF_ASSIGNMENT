@@ -36,7 +36,7 @@ const ViewStats = () => {
       const [userRes, courseRes, certRes, planRes, postRes, skillRes] =
         await Promise.all([
           fetch("http://localhost:8070/api/user/all"),
-          fetch("http://localhost:8070/api/dsrcourses"),
+          fetch("http://localhost:8070/api/courses"),
           fetch("http://localhost:8070/api/certifications/all"),
           fetch("http://localhost:8070/api/learningplans/all"),
           fetch("http://localhost:8070/api/media/getAll"),
