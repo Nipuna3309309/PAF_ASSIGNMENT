@@ -10,6 +10,7 @@ import CertificatePage from "./pages/CertificatePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 
+
 function App() {
   return (
     <>
@@ -32,6 +33,7 @@ function App() {
           }
         />
       </Routes>
+
     </>
   );
 }
