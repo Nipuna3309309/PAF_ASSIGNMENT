@@ -50,6 +50,10 @@ public class CertificationService {
     public void deleteCertification(String id) {
         certificationRepository.deleteById(id);
     }
+
+       public List<Certification> getAllCertifications() {
+    return certificationRepository.findAll();
+}
     
 }
 

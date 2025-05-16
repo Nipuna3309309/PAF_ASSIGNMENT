@@ -29,5 +29,10 @@ public class SkillController {
     skillService.deleteSkill(id);
 }
 
+@GetMapping("/all")
+public List<Skill> getAllSkills() {
+    return skillService.getAllSkills();
+}
+
 }
 
