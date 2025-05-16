@@ -1,5 +1,5 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -10,7 +10,6 @@ import ShareLearningPlan from './pages/ShareLearningPlan';
 function App() {
   return (
     <>
-      <BrowserRouter>
         <Routes>
           <Route path="/certificate/:courseId" element={<CertificatePage />} />
           <Route path="/learning-progress" element={<LearningProgressPage />} />
@@ -26,7 +25,6 @@ function App() {
           <Route path="/learningplan/share/:planId" element={<ShareLearningPlan />} />
 
         </Routes>
-      </BrowserRouter>
     </>
   );
 }
