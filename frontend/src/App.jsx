@@ -27,7 +27,7 @@ function App() {
 
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-<Route path="/learningplan" element={<LearningPlanPage />} />
+        <Route path="/learningplan" element={<LearningPlanPage />} />
           <Route path="/learningplan/view/:planId" element={<LearningPlanDetailPage />} />
           <Route path="/aigenerate-tasks" element={<AIGenerateTasksPage />} />
           <Route path="/learningplan/share/:planId" element={<ShareLearningPlan />} />

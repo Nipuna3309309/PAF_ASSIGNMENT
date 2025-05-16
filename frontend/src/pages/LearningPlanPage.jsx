@@ -345,7 +345,7 @@ const LearningPlanPage = () => {
                         }}
                         className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                       >
-                        {/* Course header with gradient */}
+                    
                         <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 relative overflow-hidden flex items-center justify-center">
                           <div className="absolute inset-0 bg-blue-500 opacity-20 animate-pulse"></div>
                           <div className="relative z-10">
@@ -393,7 +393,6 @@ const LearningPlanPage = () => {
         )}
       </div>
 
-      {/* Create Modal with AnimatePresence */}
       <AnimatePresence>
         {showCreateModal && (
           <motion.div
@@ -417,7 +416,6 @@ const LearningPlanPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Modal with AnimatePresence */}
       <AnimatePresence>
         {showEditModal && selectedPlan && (
           <motion.div
